@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 3
 next_round: 3
-updated_at: 2026-08-01T03:27:00+07:00
+updated_at: 2026-08-01T04:14:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -43,22 +43,23 @@ objective: Gate Online startup on successful asset configuration, manifest loadi
 - Online startup fails closed and emits `robrowser-startup-error`.
 - Added five startup-policy tests.
 - Deferred `FileManager` manifest resolution to Round 4.
-- Simplified the bootstrap factory and startup entry expressions so focused Prettier can produce deterministic output without changing runtime behavior.
+- Normalized the two Round 3 startup files to LF without changing runtime behavior.
 
 ### Evidence
 
 ```yaml
-latest_completed_workflow_run: 30662414250
-latest_completed_job: 91261494750
+failed_workflow_run: 30662756438
+failed_job: 91262580233
 vitest: 10 passed
 eslint: passed
 prettier: failed on src/Assets/AssetStartup.js and src/main.js
-remediation_commits:
-  - 018763b6207c7b72cc8a930c935301f8f016fac9
-  - c7f80aef7318c154ab2e4f54c1770e0596498c95
-current_code_head: c7f80aef7318c154ab2e4f54c1770e0596498c95
-replacement_workflow_run: 30662729116
-replacement_workflow_status: queued
+root_cause: both files were stored with CRLF while Prettier 3.8.1 expects LF by default
+line_ending_remediation_commits:
+  - 26ecade9c3bb9f90fe3347b5dbe4d121d6b22687
+  - 998a50dc35ee69db853397d820048e1f20e7e82e
+current_code_head: 998a50dc35ee69db853397d820048e1f20e7e82e
+replacement_workflow_run: 30665994093
+replacement_workflow_status: in_progress
 ```
 
 ### Acceptance gate
@@ -69,12 +70,12 @@ replacement_workflow_status: queued
 - [x] Controlled startup error path exists.
 - [x] Focused tests exist and pass in CI.
 - [x] Focused ESLint passes in CI.
-- [ ] Focused Prettier passes after deterministic-expression remediation.
+- [ ] Focused Prettier passes after LF normalization.
 
 ### Current blocker
 
-The latest completed focused run passed all ten tests and ESLint but still reported formatting differences in the two Round 3 startup files. Both expressions were rewritten into simpler, behavior-equivalent forms and a replacement workflow was queued. Its result was not available at cycle close, so Round 3 remains `PARTIAL` and Round 4 has not started.
+The focused workflow confirmed that all ten tests and ESLint pass. Its only failure was Prettier on the two startup files. Inspection showed those files were stored with CRLF, while the repository's Prettier invocation uses its default LF line ending. This cycle normalized only those files to LF. Replacement workflow `30665994093` was still running at cycle close, so Round 3 remains `PARTIAL` and Round 4 has not started.
 
 ## Next controlled round
 
-Continue Round 3 only. Inspect workflow `30662729116` or the latest focused workflow on the PR head. Mark Round 3 `PASS` only after Vitest, ESLint, and Prettier all succeed. Do not begin Round 4 before that gate passes.
+Continue Round 3 only. Inspect workflow `30665994093` or the latest focused workflow for code head `998a50dc35ee69db853397d820048e1f20e7e82e`. Mark Round 3 `PASS` only after Vitest, ESLint, and Prettier all succeed. Do not begin Round 4 before that gate passes.
