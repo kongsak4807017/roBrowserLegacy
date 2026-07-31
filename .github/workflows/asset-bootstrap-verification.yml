@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'src/Assets/**'
+      - 'src/App/Online.js'
+      - 'src/main.js'
       - 'tests/Assets/**'
       - '.github/workflows/asset-bootstrap-verification.yml'
       - 'package.json'
@@ -12,6 +14,8 @@ on:
       - feature/asset-server-first
     paths:
       - 'src/Assets/**'
+      - 'src/App/Online.js'
+      - 'src/main.js'
       - 'tests/Assets/**'
       - '.github/workflows/asset-bootstrap-verification.yml'
       - 'package.json'
@@ -37,10 +41,10 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Run focused tests
-        run: npx vitest run tests/Assets/AssetBootstrap.test.js
+        run: npx vitest run tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js
 
       - name: Run focused lint
-        run: npx eslint src/Assets/AssetBootstrap.js --max-warnings 0
+        run: npx eslint src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/App/Online.js src/main.js --max-warnings 0
 
       - name: Check focused formatting
-        run: npx prettier --check src/Assets/AssetBootstrap.js tests/Assets/AssetBootstrap.test.js
+        run: npx prettier --check src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/App/Online.js src/main.js tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js
