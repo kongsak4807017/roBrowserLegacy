@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 3
 next_round: 3
-updated_at: 2026-08-01T02:11:00+07:00
+updated_at: 2026-08-01T03:20:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -16,112 +16,64 @@ updated_at: 2026-08-01T02:11:00+07:00
 ```yaml
 round: 1
 status: PASS
-objective: Establish the controlled implementation baseline before runtime integration.
 ```
-
-### Acceptance gate
-
-- [x] Current branch and PR identified.
-- [x] Startup entry points identified.
-- [x] Legacy GRF/local-source configuration surfaces identified.
-- [x] Runtime asset I/O seam identified.
-- [x] Risks and execution rules documented.
-- [x] No runtime behavior changed.
 
 ## Round 2 — Asset Bootstrap Coordinator
 
 ```yaml
 round: 2
 status: PASS
-objective: Add and verify a deterministic coordinator for configuration, manifest loading, required-group validation, and fail-closed bootstrap errors.
-```
-
-### Evidence
-
-```yaml
 successful_workflow_run: 30642091440
 successful_job: 91194301183
 ```
-
-### Acceptance gate
-
-- [x] Bootstrap coordinator added.
-- [x] Deterministic states defined.
-- [x] Configuration and manifest loading sequenced.
-- [x] Required-group validation invoked before `ready`.
-- [x] Focused tests added and verified.
-- [x] Vitest, ESLint, and Prettier verified by CI.
 
 ## Round 3 — Wire Asset Bootstrap into application startup
 
 ```yaml
 round: 3
 status: PARTIAL
-objective: Gate the Online application startup on successful asset configuration, manifest loading, and required-group validation.
+objective: Gate Online startup on successful asset configuration, manifest loading, and required-group validation.
 ```
 
 ### Implemented
 
-- Added `src/Assets/AssetStartup.js` as the testable startup policy.
-- Asset-server mode is now the default startup path.
-- Local GRF/data import bypass is allowed only when both `development: true` and `assetBootstrap.allowLocalImport: true` are explicitly configured.
-- Added support for deployment-specific `assetBootstrap.configPath`.
-- Removed the import-time `Online.init()` side effect.
-- Updated `src/main.js` to initialize assets before dynamically importing and starting `App/Online.js`.
-- Online startup now fails closed and emits `robrowser-startup-error` without dispatching `robrowser-ready`.
-- Added controlled preloader error rendering without exposing stack details.
-- Added `tests/Assets/AssetStartup.test.js` covering default asset-server startup, custom config path, explicit local-development bypass, fail-closed rejection, and controlled error rendering.
-- Expanded the focused GitHub Actions workflow to cover startup source and tests.
-- `FileManager` manifest resolution was intentionally not changed; it remains Round 4.
-- Normalized `src/Assets/AssetStartup.js` and `src/main.js` to the repository-required CRLF line endings after CI confirmed tests and lint passed but formatting failed.
+- Added `src/Assets/AssetStartup.js` as the startup policy.
+- Asset-server mode is the default Online startup path.
+- Local import requires both `development: true` and `assetBootstrap.allowLocalImport: true`.
+- Online startup fails closed and emits `robrowser-startup-error`.
+- Added five startup-policy tests.
+- Deferred `FileManager` manifest resolution to Round 4.
+- Applied Prettier v3 formatting to `src/Assets/AssetStartup.js` and `src/main.js` after line-ending normalization alone proved insufficient.
 
 ### Evidence
 
 ```yaml
-commits:
-  - c0b9608f6f64a5b8d45ddc47bfad00bb864f4958
-  - 84897cd8b9142845b75c7a622b9cf35a3797f5a5
-  - 3bf681bfe5d6dfaeb4c51af328631cd974fc19fe
-  - f0efbb21023622bb6b6ac2f316d0ab67d6d9f576
-  - 404de9ed0ef3dcce17829a2bcb42451d652db7cb
-  - 1f08638fce3fa3b9bec595583a86e317364f3cd5
-  - 15e6153b739e2f299d877a79ec07779184510ec5
-  - 9da3f7af474d8485c709dae28e45153491c0946f
-  - 5ad9af3e532575fe88d17e662ba934d7ad1590d1
-failed_workflow_run: 30654690706
-failed_job: 91236095599
-verification_from_failed_run:
-  vitest: 10 passed
-  eslint: passed
-  prettier: failed only for AssetStartup.js and main.js
-root_cause: new JavaScript files used LF while .editorconfig requires CRLF
-replacement_head_commit: 5ad9af3e532575fe88d17e662ba934d7ad1590d1
-replacement_workflow_status: not yet available at cycle close
-pull_request: 1
+latest_completed_workflow_run: 30658284776
+latest_completed_job: 91248055147
+vitest: 10 passed
+eslint: passed
+prettier: failed before remediation
+remediation_commits:
+  - a4125ec260c06c35b66eab8c88efda482f1282c2
+  - 1982898fbdb81598ee28c61b71483e792b010f5e
+current_head: 1982898fbdb81598ee28c61b71483e792b010f5e
+replacement_workflow_status: pending
 ```
 
 ### Acceptance gate
 
-- [x] Startup source inspected before modification.
-- [x] Online startup waits for Asset Bootstrap.
+- [x] Startup waits for Asset Bootstrap.
 - [x] Production/default mode fails closed.
 - [x] Local import requires explicit development configuration.
-- [x] Controlled startup error path added.
-- [x] Focused tests added.
-- [x] `FileManager` integration deferred to Round 4.
-- [x] Focused Vitest execution verified for Round 3.
-- [x] Focused ESLint execution verified for Round 3.
-- [ ] Focused Prettier execution verified after CRLF normalization.
+- [x] Controlled startup error path exists.
+- [x] Focused tests exist and pass in CI.
+- [x] Focused ESLint passes in CI.
+- [ ] Focused Prettier passes after the latest remediation.
 
 ### Current blocker
 
-The latest completed focused workflow verified all 10 tests and ESLint, then failed only on formatting. Job logs and `.editorconfig` showed the exact cause: both new JavaScript files used LF while this repository requires CRLF. The two files were rewritten with CRLF without changing runtime logic. A replacement workflow result was not yet available at the end of this controlled cycle, so Round 3 remains `PARTIAL`.
+The latest completed workflow passed all ten tests and ESLint, then failed only on formatting. The affected files now include the structural formatting required by Prettier v3. A replacement workflow result was not available at cycle close, so Round 3 remains `PARTIAL`.
 
 ## Next controlled round
 
-Continue **Round 3** only:
-
-1. Inspect the latest `Asset Bootstrap Verification` workflow for head commit `5ad9af3e532575fe88d17e662ba934d7ad1590d1` or its PR merge commit.
-2. Mark Round 3 `PASS` only after focused Vitest, ESLint, and Prettier all succeed.
-3. Fix only Round 3 verification failures if CI still fails.
-4. Do not begin `FileManager` manifest integration until the Round 3 gate passes.
+Continue Round 3 only. Inspect the workflow for commit `1982898fbdb81598ee28c61b71483e792b010f5e` or its PR merge commit. Mark Round 3 `PASS` only after Vitest, ESLint, and Prettier all succeed. Do not begin Round 4 before that gate passes.
