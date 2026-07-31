@@ -6,9 +6,9 @@ branch: feature/asset-server-first
 pull_request: 1
 status: IN_PROGRESS
 hourly_loop: CONTINUE
-current_round: 2
+current_round: 3
 next_round: 3
-updated_at: 2026-07-31T23:14:00+07:00
+updated_at: 2026-08-01T00:13:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -18,15 +18,6 @@ round: 1
 status: PASS
 objective: Establish the controlled implementation baseline before runtime integration.
 ```
-
-### Evidence inspected
-
-- `docs/architecture/ASSET_SERVER_FIRST_PLAN.md`
-- Draft PR #1 (`feature/asset-server-first` -> `master`)
-- `package.json`
-- `applications/browser-examples/demo.html`
-- `applications/api/api.js`
-- `src/Core/FileManager.js`
 
 ### Acceptance gate
 
@@ -45,43 +36,12 @@ status: PASS
 objective: Add and verify a deterministic coordinator for configuration, manifest loading, required-group validation, and fail-closed bootstrap errors.
 ```
 
-### Implemented
-
-- Added `src/Assets/AssetBootstrap.js`.
-- Added deterministic states: `idle`, `loading-config`, `loading-manifest`, `validating`, `ready`, and `failed`.
-- Added structured `AssetBootstrapError` codes.
-- Added dependency injection for focused tests without startup wiring.
-- Added `tests/Assets/AssetBootstrap.test.js` covering success order, timeout classification, invalid configuration, required-group failure, and concurrent initialization rejection.
-- Added `.github/workflows/asset-bootstrap-verification.yml` to run focused Vitest, ESLint, and Prettier checks on Node.js 22.
-- Removed lockfile-dependent npm caching because the repository does not contain a supported dependency lockfile.
-- Aligned focused lint with the repository ignore policy by linting production source while Vitest verifies the ignored test fixture.
-
 ### Evidence
 
 ```yaml
-implementation_commits:
-  - 7037568dabf84ad089453dbd1e595ff95f253871
-  - 65c64bd8e5629ff7b13e05a4f729c96a11b026b3
-  - e09e84d84975cb1186a0cbfee11244e797507ebd
-verification_workflow_commits:
-  - 209ca230cf735ed2c38ceaf21d127c0519f93434
-  - 51652cc8216681e7d477ce1be72c97a4b1573beb
-  - 6d113e9a64be40ba3af42cd87aa97dd96b531115
 successful_workflow_run: 30642091440
 successful_job: 91194301183
-pull_request: 1
 ```
-
-### Validation evidence
-
-Workflow run `30642091440` completed with conclusion `success`. Job `91194301183` verified all focused Round 2 checks:
-
-- `Install dependencies`: success
-- `Run focused tests`: success
-- `Run focused lint`: success
-- `Check focused formatting`: success
-
-The earlier successful Vitest run also recorded 1 test file and 5 tests passing. No startup wiring was introduced during Round 2.
 
 ### Acceptance gate
 
@@ -89,26 +49,65 @@ The earlier successful Vitest run also recorded 1 test file and 5 tests passing.
 - [x] Deterministic states defined.
 - [x] Configuration and manifest loading sequenced.
 - [x] Required-group validation invoked before `ready`.
-- [x] Focused tests added for required scenarios.
-- [x] Startup wiring intentionally not changed.
-- [x] Focused CI workflow committed.
-- [x] Vitest execution verified.
-- [x] ESLint execution verified.
-- [x] Prettier execution verified.
+- [x] Focused tests added and verified.
+- [x] Vitest, ESLint, and Prettier verified by CI.
 
-### Result
+## Round 3 — Wire Asset Bootstrap into application startup
 
-Round 2 is closed as `PASS`. The previous blocker was transient and is resolved. This controlled cycle does not begin Round 3.
+```yaml
+round: 3
+status: PARTIAL
+objective: Gate the Online application startup on successful asset configuration, manifest loading, and required-group validation.
+```
+
+### Implemented
+
+- Added `src/Assets/AssetStartup.js` as the testable startup policy.
+- Asset-server mode is now the default startup path.
+- Local GRF/data import bypass is allowed only when both `development: true` and `assetBootstrap.allowLocalImport: true` are explicitly configured.
+- Added support for deployment-specific `assetBootstrap.configPath`.
+- Removed the import-time `Online.init()` side effect.
+- Updated `src/main.js` to initialize assets before dynamically importing and starting `App/Online.js`.
+- Online startup now fails closed and emits `robrowser-startup-error` without dispatching `robrowser-ready`.
+- Added controlled preloader error rendering without exposing stack details.
+- Added `tests/Assets/AssetStartup.test.js` covering default asset-server startup, custom config path, explicit local-development bypass, fail-closed rejection, and controlled error rendering.
+- Expanded the focused GitHub Actions workflow to cover startup source and tests.
+- `FileManager` manifest resolution was intentionally not changed; it remains Round 4.
+
+### Evidence
+
+```yaml
+commits:
+  - c0b9608f6f64a5b8d45ddc47bfad00bb864f4958
+  - 84897cd8b9142845b75c7a622b9cf35a3797f5a5
+  - 3bf681bfe5d6dfaeb4c51af328631cd974fc19fe
+  - f0efbb21023622bb6b6ac2f316d0ab67d6d9f576
+  - 404de9ed0ef3dcce17829a2bcb42451d652db7cb
+pull_request: 1
+```
+
+### Acceptance gate
+
+- [x] Startup source inspected before modification.
+- [x] Online startup waits for Asset Bootstrap.
+- [x] Production/default mode fails closed.
+- [x] Local import requires explicit development configuration.
+- [x] Controlled startup error path added.
+- [x] Focused tests added.
+- [x] `FileManager` integration deferred to Round 4.
+- [ ] Focused Vitest execution verified for Round 3.
+- [ ] Focused ESLint execution verified for Round 3.
+- [ ] Focused Prettier execution verified for Round 3.
+
+### Current blocker
+
+The workflow-triggering commit was pushed successfully, but no GitHub Actions run was visible at the end of this controlled cycle. This is treated as a transient verification wait, not a code blocker. Round 3 remains `PARTIAL` and must be verified before Round 4 starts.
 
 ## Next controlled round
 
-**Round 3 — Wire Asset Bootstrap into application startup**
+Continue **Round 3** only:
 
-Scope:
-
-- Inspect the runtime startup bridge and configuration assembly before modification.
-- Invoke `AssetBootstrap.initialize()` before opening the login scene.
-- Keep local GRF/data import available only under explicit development configuration.
-- In production, fail closed with a controlled startup error when configuration, manifest, or required groups are unavailable.
-- Add focused tests for startup ordering and failure behavior.
-- Do not integrate `FileManager` manifest resolution yet; that remains Round 4.
+1. Inspect the workflow run for commit `404de9ed0ef3dcce17829a2bcb42451d652db7cb` or the latest status-document commit.
+2. Fix any focused test, lint, or formatting failure within Round 3 scope.
+3. Mark Round 3 `PASS` only after executable verification succeeds.
+4. Do not begin `FileManager` manifest integration until the Round 3 gate passes.
