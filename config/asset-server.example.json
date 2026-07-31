@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "mode": "production",
+  "assetServer": "https://assets.example.com/roweb/",
+  "manifest": "manifests/current.json",
+  "allowLocalImport": false,
+  "requestTimeoutMs": 15000,
+  "telemetryEndpoint": "/api/client-telemetry",
+  "requiredGroups": [
+    "bootstrap",
+    "login",
+    "ui-classic-core"
+  ]
+}
