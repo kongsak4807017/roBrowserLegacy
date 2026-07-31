@@ -3,9 +3,11 @@
  * Entry point for roBrowserLegacy (ES6 version)
  * Centralized loader for all applications.
  */
-// eslint-disable-next-line
-import Online from 'App/Online.js';
 import { roInitSpinner } from 'App/PreLoader.js';
+import {
+	initializeAssetStartup,
+	renderAssetStartupError
+} from 'Assets/AssetStartup.js';
 import Configs from 'Core/Configs.js';
 
 const APP = {
@@ -18,14 +20,32 @@ const APP = {
 	EFFECTVIEWER: 7
 };
 
+async function launchOnline(config) {
+	try {
+		const assetRuntime = await initializeAssetStartup(config);
+		window.ROAssetRuntime = assetRuntime;
+
+		const Online = await import('App/Online.js');
+		Online.init();
+		return true;
+	} catch (error) {
+		console.error('Asset bootstrap failed:', error);
+		renderAssetStartupError(error);
+		window.dispatchEvent(new CustomEvent('robrowser-startup-error', { detail: error }));
+		return false;
+	}
+}
+
 /**
  * Launch the appropriate application based on config
  */
 async function launch(config) {
 	const appId = parseInt(config.application, 10) || APP.ONLINE;
+	let launched = true;
 
 	switch (appId) {
 		case APP.ONLINE:
+			launched = await launchOnline(config);
 			break;
 
 		case APP.MAPVIEWER:
@@ -54,10 +74,13 @@ async function launch(config) {
 
 		default:
 			console.error('Unknown application ID:', appId);
+			launched = false;
 			break;
 	}
 
-	window.dispatchEvent(new Event('robrowser-ready'));
+	if (launched) {
+		window.dispatchEvent(new Event('robrowser-ready'));
+	}
 }
 
 // Global initialization
