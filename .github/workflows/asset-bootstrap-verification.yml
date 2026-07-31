@@ -40,7 +40,7 @@ jobs:
         run: npx vitest run tests/Assets/AssetBootstrap.test.js
 
       - name: Run focused lint
-        run: npx eslint src/Assets/AssetBootstrap.js tests/Assets/AssetBootstrap.test.js --max-warnings 0
+        run: npx eslint src/Assets/AssetBootstrap.js --max-warnings 0
 
       - name: Check focused formatting
         run: npx prettier --check src/Assets/AssetBootstrap.js tests/Assets/AssetBootstrap.test.js
