@@ -4,10 +4,7 @@
  * Centralized loader for all applications.
  */
 import { roInitSpinner } from 'App/PreLoader.js';
-import {
-	initializeAssetStartup,
-	renderAssetStartupError
-} from 'Assets/AssetStartup.js';
+import { initializeAssetStartup, renderAssetStartupError } from 'Assets/AssetStartup.js';
 import Configs from 'Core/Configs.js';
 
 const APP = {
@@ -31,7 +28,9 @@ async function launchOnline(config) {
 	} catch (error) {
 		console.error('Asset bootstrap failed:', error);
 		renderAssetStartupError(error);
-		window.dispatchEvent(new CustomEvent('robrowser-startup-error', { detail: error }));
+		window.dispatchEvent(
+			new CustomEvent('robrowser-startup-error', { detail: error })
+		);
 		return false;
 	}
 }
@@ -101,7 +100,9 @@ if (window.ROConfig) {
 			// Configs is populated by an IIFE at import time, which runs before this
 			// config arrives via postMessage; apply the received config so options such
 			// as 'api' are available (frame/popup API mode).
-			Object.keys(window.ROConfig).forEach(key => Configs.set(key, window.ROConfig[key]));
+			Object.keys(window.ROConfig).forEach(key =>
+				Configs.set(key, window.ROConfig[key])
+			);
 			launch(window.ROConfig);
 			window.removeEventListener('message', onMessage);
 		}
