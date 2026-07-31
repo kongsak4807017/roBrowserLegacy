@@ -24,8 +24,11 @@ async function initializeAssetStartup(config = {}, options = {}) {
 		});
 	}
 
-	const createBootstrap =
-		options.createBootstrap || (() => new AssetBootstrap(options.bootstrapOptions));
+	let createBootstrap = options.createBootstrap;
+	if (!createBootstrap) {
+		createBootstrap = () => new AssetBootstrap(options.bootstrapOptions);
+	}
+
 	const bootstrap = createBootstrap();
 	const result = await bootstrap.initialize(getConfigPath(config));
 
