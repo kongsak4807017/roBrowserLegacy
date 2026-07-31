@@ -20,5 +20,3 @@ export default {
 	init: init,
 	roInitSpinner: roInitSpinner
 };
-
-init();
