@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 2
 next_round: 2
-updated_at: 2026-07-31T20:13:00+07:00
+updated_at: 2026-07-31T21:13:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -28,22 +28,6 @@ objective: Establish the controlled implementation baseline before runtime integ
 - `applications/api/api.js`
 - `src/Core/FileManager.js`
 
-### Baseline findings
-
-1. The production migration plan is present and requires fail-closed asset-server configuration.
-2. The draft PR is open and mergeable; no runtime integration has been performed yet.
-3. `applications/browser-examples/demo.html` is the active Vite development entry and currently supplies `remoteClient`, `grfList`, `development`, and `skipIntro` directly in `ROConfig`.
-4. `applications/api/api.js` exposes legacy `grfList`, `remoteClient`, `saveFiles`, `development`, and `skipIntro` configuration paths.
-5. `src/Core/FileManager.js` remains the runtime asset I/O seam for local filesystem, GRF, and HTTP fallback.
-6. Production player browsing has not yet been removed; the next safe step is to add an `AssetBootstrap` coordinator before changing startup behavior.
-
-### Validation
-
-- Documentation and source inspection completed.
-- No runtime code changed in this round.
-- No proprietary or private assets added.
-- Build/lint/test execution was not applicable to this documentation-only baseline round.
-
 ### Acceptance gate
 
 - [x] Current branch and PR identified.
@@ -58,38 +42,37 @@ objective: Establish the controlled implementation baseline before runtime integ
 ```yaml
 round: 2
 status: PARTIAL
-objective: Add a deterministic coordinator for configuration, manifest loading, required-group validation, and fail-closed bootstrap errors.
+objective: Add and verify a deterministic coordinator for configuration, manifest loading, required-group validation, and fail-closed bootstrap errors.
 ```
 
-### Changes
+### Implemented
 
 - Added `src/Assets/AssetBootstrap.js`.
 - Added deterministic states: `idle`, `loading-config`, `loading-manifest`, `validating`, `ready`, and `failed`.
-- Added structured `AssetBootstrapError` codes for timeout, invalid configuration, invalid manifest, incomplete required groups, invalid state, and unclassified bootstrap failures.
-- Added dependency injection for focused tests without wiring application startup.
+- Added structured `AssetBootstrapError` codes.
+- Added dependency injection for focused tests without startup wiring.
 - Added `tests/Assets/AssetBootstrap.test.js` covering success order, timeout classification, invalid configuration, required-group failure, and concurrent initialization rejection.
+- Added `.github/workflows/asset-bootstrap-verification.yml` to run the focused Vitest, ESLint, and Prettier checks on Node.js 22.
 
 ### Evidence
 
 ```yaml
-commits:
+implementation_commits:
   - 7037568dabf84ad089453dbd1e595ff95f253871
   - 65c64bd8e5629ff7b13e05a4f729c96a11b026b3
+  - e09e84d84975cb1186a0cbfee11244e797507ebd
+verification_workflow_commit:
+  - 209ca230cf735ed2c38ceaf21d127c0519f93434
 pull_request: 1
-head: 65c64bd8e5629ff7b13e05a4f729c96a11b026b3
 ```
 
-### Validation attempted
+### Validation attempted in this cycle
 
-Commands prepared for execution:
-
-```text
-npx vitest run tests/Assets/AssetBootstrap.test.js
-npx eslint src/Assets/AssetBootstrap.js tests/Assets/AssetBootstrap.test.js
-npx prettier --check src/Assets/AssetBootstrap.js tests/Assets/AssetBootstrap.test.js
-```
-
-The execution environment could not clone the public repository because the container command failed before process output was produced. No GitHub Actions workflow run was available for the PR head. Therefore executable verification is incomplete and the round cannot be marked `PASS` under execution-contract risk `AS-R14`.
+1. Re-inspected `package.json`, `src/Assets/AssetBootstrap.js`, and `tests/Assets/AssetBootstrap.test.js`.
+2. Confirmed the repository requires Node.js 22 and includes Vitest, ESLint, and Prettier dev dependencies.
+3. Attempted to clone and execute the focused checks in the available command container; the container failed before returning process output.
+4. Added a focused GitHub Actions workflow as an equivalent executable-verification path.
+5. Queried workflow runs and combined status for commit `209ca230cf735ed2c38ceaf21d127c0519f93434`; no workflow run or status context was available during this cycle.
 
 ### Acceptance gate
 
@@ -99,22 +82,23 @@ The execution environment could not clone the public repository because the cont
 - [x] Required-group validation invoked before `ready`.
 - [x] Focused tests added for required scenarios.
 - [x] Startup wiring intentionally not changed.
+- [x] Focused CI workflow committed.
 - [ ] Vitest execution verified.
 - [ ] ESLint execution verified.
 - [ ] Prettier execution verified.
 
 ### Blocker
 
-Executable verification is unavailable in the current tool environment, and this repository currently has no workflow run for the new PR head. Continue Round 2 in the next controlled cycle; do not begin startup integration until tests, lint, and formatting are executed successfully or equivalent CI evidence is available.
+Executable evidence is still unavailable. The local command container fails before process output, and GitHub returned no workflow run or status for the new verification-workflow commit during this cycle. Do not begin Round 3 until the focused workflow produces pass/fail evidence or another executable environment verifies the commands.
 
 ## Next controlled round
 
-**Continue Round 2 — Verification and correction**
+**Continue Round 2 — Obtain executable verification evidence**
 
 Scope:
 
-- Execute the focused Vitest suite.
-- Execute ESLint and Prettier checks for the new files.
-- Correct any discovered defects.
-- Mark Round 2 `PASS` only after executable evidence is available.
-- Do not wire application startup yet; startup integration remains Round 3.
+- Inspect the workflow run/status for commit `209ca230cf735ed2c38ceaf21d127c0519f93434` or the latest branch head.
+- If the workflow runs, inspect failed steps and correct only Round 2 defects.
+- If Actions remain unavailable, document the repository-level Actions/billing/permissions blocker precisely.
+- Mark Round 2 `PASS` only after Vitest, ESLint, and Prettier succeed.
+- Do not wire application startup; startup integration remains Round 3.
