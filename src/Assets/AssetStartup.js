@@ -20,7 +20,7 @@ async function initializeAssetStartup(config = {}, options = {}) {
 		return Object.freeze({
 			mode: LOCAL_DEVELOPMENT_MODE,
 			config: null,
-			manifest: null,
+			manifest: null
 		});
 	}
 
@@ -36,7 +36,7 @@ async function initializeAssetStartup(config = {}, options = {}) {
 		mode: ASSET_SERVER_MODE,
 		config: result.config,
 		manifest: result.manifest,
-		bootstrap,
+		bootstrap
 	});
 }
 
@@ -61,5 +61,5 @@ export {
 	getConfigPath,
 	initializeAssetStartup,
 	isExplicitLocalDevelopment,
-	renderAssetStartupError,
+	renderAssetStartupError
 };
