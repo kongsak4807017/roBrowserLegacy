@@ -72,7 +72,8 @@ function toHumanReadable(report) {
 			const reasons = [];
 			if (group.missingGroup) reasons.push('group missing');
 			if (group.missingAssets.length) reasons.push(`missing assets: ${group.missingAssets.join(', ')}`);
-			if (group.invalidAssets.length) reasons.push(`invalid assets: ${group.invalidAssets.map(item => item.assetId).join(', ')}`);
+			if (group.invalidAssets.length)
+				reasons.push(`invalid assets: ${group.invalidAssets.map(item => item.assetId).join(', ')}`);
 			return `${group.groupId}: ${reasons.join('; ')}`;
 		});
 
