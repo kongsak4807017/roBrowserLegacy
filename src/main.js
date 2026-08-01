@@ -3,10 +3,11 @@
  * Entry point for roBrowserLegacy (ES6 version)
  * Centralized loader for all applications.
  */
-// eslint-disable-next-line
-import Online from 'App/Online.js';
 import { roInitSpinner } from 'App/PreLoader.js';
+import { installAssetFileResolver } from 'Assets/AssetFileResolver.js';
+import * as AssetStartup from 'Assets/AssetStartup.js';
 import Configs from 'Core/Configs.js';
+import FileManager from 'Core/FileManager.js';
 
 const APP = {
 	ONLINE: 1,
@@ -18,14 +19,38 @@ const APP = {
 	EFFECTVIEWER: 7
 };
 
+async function launchOnline(config) {
+	try {
+		const assetRuntime = await AssetStartup.initializeAssetStartup(config);
+		if (assetRuntime.mode === AssetStartup.ASSET_SERVER_MODE) {
+			installAssetFileResolver(FileManager, assetRuntime.manifest);
+		}
+		window.ROAssetRuntime = assetRuntime;
+
+		const Online = await import('App/Online.js');
+		Online.init();
+		return true;
+	} catch (error) {
+		console.error('Asset bootstrap failed:', error);
+		AssetStartup.renderAssetStartupError(error);
+		const startupErrorEvent = new CustomEvent('robrowser-startup-error', {
+			detail: error
+		});
+		window.dispatchEvent(startupErrorEvent);
+		return false;
+	}
+}
+
 /**
  * Launch the appropriate application based on config
  */
 async function launch(config) {
 	const appId = parseInt(config.application, 10) || APP.ONLINE;
+	let launched = true;
 
 	switch (appId) {
 		case APP.ONLINE:
+			launched = await launchOnline(config);
 			break;
 
 		case APP.MAPVIEWER:
@@ -54,10 +79,13 @@ async function launch(config) {
 
 		default:
 			console.error('Unknown application ID:', appId);
+			launched = false;
 			break;
 	}
 
-	window.dispatchEvent(new Event('robrowser-ready'));
+	if (launched) {
+		window.dispatchEvent(new Event('robrowser-ready'));
+	}
 }
 
 // Global initialization
@@ -78,7 +106,9 @@ if (window.ROConfig) {
 			// Configs is populated by an IIFE at import time, which runs before this
 			// config arrives via postMessage; apply the received config so options such
 			// as 'api' are available (frame/popup API mode).
-			Object.keys(window.ROConfig).forEach(key => Configs.set(key, window.ROConfig[key]));
+			Object.keys(window.ROConfig).forEach(key => {
+				Configs.set(key, window.ROConfig[key]);
+			});
 			launch(window.ROConfig);
 			window.removeEventListener('message', onMessage);
 		}
