@@ -1,14 +1,10 @@
-import AssetBootstrap from "./AssetBootstrap.js";
+import AssetBootstrap from './AssetBootstrap.js';
 
-const LOCAL_DEVELOPMENT_MODE = "local-development";
-const ASSET_SERVER_MODE = "asset-server";
+const LOCAL_DEVELOPMENT_MODE = 'local-development';
+const ASSET_SERVER_MODE = 'asset-server';
 
 function isExplicitLocalDevelopment(config = {}) {
-	return (
-		config.development === true &&
-		config.assetBootstrap &&
-		config.assetBootstrap.allowLocalImport === true
-	);
+	return config.development === true && config.assetBootstrap && config.assetBootstrap.allowLocalImport === true;
 }
 
 function getConfigPath(config = {}) {
@@ -20,7 +16,7 @@ async function initializeAssetStartup(config = {}, options = {}) {
 		return Object.freeze({
 			mode: LOCAL_DEVELOPMENT_MODE,
 			config: null,
-			manifest: null,
+			manifest: null
 		});
 	}
 
@@ -36,22 +32,22 @@ async function initializeAssetStartup(config = {}, options = {}) {
 		mode: ASSET_SERVER_MODE,
 		config: result.config,
 		manifest: result.manifest,
-		bootstrap,
+		bootstrap
 	});
 }
 
 function renderAssetStartupError(error, documentRef = document) {
-	const preloader = documentRef.getElementById("ro-preloader");
+	const preloader = documentRef.getElementById('ro-preloader');
 	if (!preloader) {
 		return;
 	}
 
-	preloader.dataset.status = "asset-startup-failed";
-	preloader.dataset.errorCode = error?.code || "ASSET_BOOTSTRAP_FAILED";
+	preloader.dataset.status = 'asset-startup-failed';
+	preloader.dataset.errorCode = error?.code || 'ASSET_BOOTSTRAP_FAILED';
 
-	const text = preloader.querySelector(".pre-text");
+	const text = preloader.querySelector('.pre-text');
 	if (text) {
-		text.textContent = "Unable to load game assets. Please retry later.";
+		text.textContent = 'Unable to load game assets. Please retry later.';
 	}
 }
 
@@ -61,5 +57,5 @@ export {
 	getConfigPath,
 	initializeAssetStartup,
 	isExplicitLocalDevelopment,
-	renderAssetStartupError,
+	renderAssetStartupError
 };
