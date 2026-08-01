@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 5
 next_round: 5
-updated_at: 2026-08-01T18:13:00+07:00
+updated_at: 2026-08-01T23:12:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -64,17 +64,6 @@ workflow_fix_head: 314e5102f5d08b31e38580df758388f8819b5379
 verified_branch_head: 6565856ade806aba3d784e20fd0abc85a724784d
 ```
 
-### Implemented
-
-- Inspected the existing `FileManager.get` and `FileManager.getHTTP` resolution order before modifying startup integration.
-- Added `src/Assets/AssetFileResolver.js` with canonical slash, percent-decoding, Unicode NFC, and case normalization.
-- Built a lookup index from asset IDs, immutable object paths, and `legacyAliases`.
-- Installed a manifest-backed `FileManager.get` implementation before `Online.init()` in asset-server mode.
-- Production asset-server mode now fails closed for unmapped files instead of falling through to FileSystem, GRF, or `/client/` origins.
-- Explicit local-development startup remains unchanged and therefore retains the legacy local FileManager path.
-- Added focused tests for normalization, alias resolution, HTTP fetching, and unmapped-asset fail-closed behavior.
-- Aligned focused ESLint scope with the repository ignore policy while retaining resolver tests in Vitest and Prettier.
-
 ### Acceptance evidence
 
 ```yaml
@@ -93,17 +82,6 @@ proprietary_assets_added: false
 private_assets_added: false
 ```
 
-### Acceptance gate
-
-- [x] Relevant FileManager and manifest/startup source inspected before modification.
-- [x] Production requests resolve through the active manifest.
-- [x] Slashes, percent encoding, Unicode normalization, and aliases are handled.
-- [x] Unmapped production assets fail closed without local fallback.
-- [x] Explicit local-development mode preserves the legacy FileManager path.
-- [x] Focused tests added and verified.
-- [x] Focused ESLint and Prettier verified after workflow correction.
-- [x] Repository lint, format, build, and CodeQL workflows verified.
-
 ### Result
 
 Round 4 is `PASS`.
@@ -115,42 +93,52 @@ round: 5
 status: PARTIAL
 objective: Validate critical startup groups, produce machine-readable and human-readable completeness reports, and block startup when a critical dependency is absent.
 implementation_head: aa2707c363bf6b38bb37b197e992117426385d43
+format_fix_head: c7fbb9c991a489ce0e6bb12f0851bbb45ae8c646
 ```
 
 ### Implemented
 
-- Inspected the architecture AS3 requirements, current manifest validation, bootstrap state machine, focused tests, and verification workflow before modification.
 - Added `src/Assets/AssetPreflight.js` with deterministic machine-readable reports for checked groups, checked assets, missing groups, missing assets, invalid assets, and critical failures.
 - Added an actionable human-readable report renderer.
-- Added a fail-closed `ASSET_PREFLIGHT_CRITICAL_FAILURE` error carrying the structured report.
-- Integrated preflight execution into `AssetBootstrap` before the READY state and exposed the successful report in the bootstrap result.
-- Preserved the structured preflight report through bootstrap error classification.
-- Added focused tests for passing reports, missing groups, missing versus invalid assets, human-readable output, bootstrap integration, and fail-closed report preservation.
-- Expanded the focused GitHub Actions workflow to cover the Round 5 source and tests.
+- Added fail-closed `ASSET_PREFLIGHT_CRITICAL_FAILURE` errors carrying the structured report.
+- Integrated preflight execution into `AssetBootstrap` before the READY state and exposed successful reports in the bootstrap result.
+- Added focused tests covering complete groups, missing groups, missing and invalid assets, human-readable output, bootstrap integration, and report preservation.
+- Expanded focused GitHub Actions verification to include Round 5 source and tests.
+- Applied the exact Prettier delta reported by the focused workflow to `src/Assets/AssetPreflight.js`; no runtime behavior changed.
 
-### Pending acceptance evidence
+### Acceptance evidence
 
 ```yaml
-branch_head: aa2707c363bf6b38bb37b197e992117426385d43
-focused_workflow_status: not_yet_visible
-repository_workflows_status: not_yet_visible
+failed_implementation_head: aa2707c363bf6b38bb37b197e992117426385d43
+focused_workflow_run: 30697363393
+focused_workflow_job: 91362397361
+focused_vitest: PASS_20_TESTS
+focused_eslint: PASS
+focused_prettier: FAIL
+focused_prettier_file: src/Assets/AssetPreflight.js
+repository_workflows: CANCELLED_AFTER_NEWER_PUSH
+format_fix_head: c7fbb9c991a489ce0e6bb12f0851bbb45ae8c646
+replacement_workflows_status: not_yet_visible
 proprietary_assets_added: false
 private_assets_added: false
 ```
 
 ### Acceptance gate
 
-- [x] Relevant manifest, bootstrap, tests, and workflow source inspected before modification.
+- [x] Relevant manifest, bootstrap, tests, workflow, and failing job logs inspected before modification.
 - [x] Machine-readable completeness report implemented.
 - [x] Human-readable completeness report implemented.
 - [x] Critical missing groups and assets block startup.
 - [x] Focused tests added or updated.
-- [ ] Focused Vitest, ESLint, and Prettier verified on the implementation head.
-- [ ] Repository lint, format, build, and CodeQL verified on the implementation head.
+- [x] Focused Vitest verified: 20 tests passed on implementation head.
+- [x] Focused ESLint verified on implementation head.
+- [x] Exact focused Prettier delta identified and applied.
+- [ ] Replacement focused Vitest, ESLint, and Prettier verified on format-fix head.
+- [ ] Repository lint, format, build, and CodeQL verified on format-fix head.
 
 ### Exact blocker and continuation rule
 
-GitHub Actions runs for `aa2707c363bf6b38bb37b197e992117426385d43` were not yet visible when this controlled cycle closed. Round 5 therefore remains `PARTIAL`. The next cycle must inspect those workflow results, correct only Round 5 failures if present, and must not begin Round 6 until every Round 5 acceptance check passes.
+Replacement GitHub Actions runs for `c7fbb9c991a489ce0e6bb12f0851bbb45ae8c646` were not yet visible when this controlled cycle closed. Round 5 therefore remains `PARTIAL`. The next cycle must inspect those replacement workflow results and must not begin Round 6 until all Round 5 acceptance checks pass.
 
 ## Asset safety
 
