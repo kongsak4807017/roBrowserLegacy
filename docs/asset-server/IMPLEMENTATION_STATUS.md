@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 5
 next_round: 5
-updated_at: 2026-08-01T17:12:00+07:00
+updated_at: 2026-08-01T18:13:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -106,7 +106,51 @@ private_assets_added: false
 
 ### Result
 
-Round 4 is `PASS`. Advance to Round 5 in the next controlled development cycle. Round 5 was not implemented during this cycle.
+Round 4 is `PASS`.
+
+## Round 5 — Preflight and completeness reporting
+
+```yaml
+round: 5
+status: PARTIAL
+objective: Validate critical startup groups, produce machine-readable and human-readable completeness reports, and block startup when a critical dependency is absent.
+implementation_head: aa2707c363bf6b38bb37b197e992117426385d43
+```
+
+### Implemented
+
+- Inspected the architecture AS3 requirements, current manifest validation, bootstrap state machine, focused tests, and verification workflow before modification.
+- Added `src/Assets/AssetPreflight.js` with deterministic machine-readable reports for checked groups, checked assets, missing groups, missing assets, invalid assets, and critical failures.
+- Added an actionable human-readable report renderer.
+- Added a fail-closed `ASSET_PREFLIGHT_CRITICAL_FAILURE` error carrying the structured report.
+- Integrated preflight execution into `AssetBootstrap` before the READY state and exposed the successful report in the bootstrap result.
+- Preserved the structured preflight report through bootstrap error classification.
+- Added focused tests for passing reports, missing groups, missing versus invalid assets, human-readable output, bootstrap integration, and fail-closed report preservation.
+- Expanded the focused GitHub Actions workflow to cover the Round 5 source and tests.
+
+### Pending acceptance evidence
+
+```yaml
+branch_head: aa2707c363bf6b38bb37b197e992117426385d43
+focused_workflow_status: not_yet_visible
+repository_workflows_status: not_yet_visible
+proprietary_assets_added: false
+private_assets_added: false
+```
+
+### Acceptance gate
+
+- [x] Relevant manifest, bootstrap, tests, and workflow source inspected before modification.
+- [x] Machine-readable completeness report implemented.
+- [x] Human-readable completeness report implemented.
+- [x] Critical missing groups and assets block startup.
+- [x] Focused tests added or updated.
+- [ ] Focused Vitest, ESLint, and Prettier verified on the implementation head.
+- [ ] Repository lint, format, build, and CodeQL verified on the implementation head.
+
+### Exact blocker and continuation rule
+
+GitHub Actions runs for `aa2707c363bf6b38bb37b197e992117426385d43` were not yet visible when this controlled cycle closed. Round 5 therefore remains `PARTIAL`. The next cycle must inspect those workflow results, correct only Round 5 failures if present, and must not begin Round 6 until every Round 5 acceptance check passes.
 
 ## Asset safety
 
