@@ -14,7 +14,7 @@ const APP = {
 	MODELVIEWER: 4,
 	STRVIEWER: 5,
 	GRANNYMODELVIEWER: 6,
-	EFFECTVIEWER: 7,
+	EFFECTVIEWER: 7
 };
 
 async function launchOnline(config) {
@@ -29,7 +29,7 @@ async function launchOnline(config) {
 		console.error('Asset bootstrap failed:', error);
 		AssetStartup.renderAssetStartupError(error);
 		const startupErrorEvent = new CustomEvent('robrowser-startup-error', {
-			detail: error,
+			detail: error
 		});
 		window.dispatchEvent(startupErrorEvent);
 		return false;
@@ -91,7 +91,7 @@ if (window.ROConfig) {
 	launch(window.ROConfig);
 } else {
 	// Wait for configuration via postMessage (API mode)
-	const onMessage = (event) => {
+	const onMessage = event => {
 		// Only accept messages from the parent window or opener (the page that loaded us)
 		if (event.source !== window.parent && event.source !== window.opener) {
 			return;
@@ -101,7 +101,7 @@ if (window.ROConfig) {
 			// Configs is populated by an IIFE at import time, which runs before this
 			// config arrives via postMessage; apply the received config so options such
 			// as 'api' are available (frame/popup API mode).
-			Object.keys(window.ROConfig).forEach((key) => {
+			Object.keys(window.ROConfig).forEach(key => {
 				Configs.set(key, window.ROConfig[key]);
 			});
 			launch(window.ROConfig);
