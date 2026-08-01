@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 3
 next_round: 3
-updated_at: 2026-08-01T12:16:00+07:00
+updated_at: 2026-08-01T13:11:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -45,21 +45,22 @@ objective: Gate Online startup on successful asset configuration, manifest loadi
 - Deferred `FileManager` manifest resolution to Round 4.
 - Updated the focused workflow to check out the pull-request branch head instead of GitHub's synthetic merge commit.
 - Applied formatter-directed changes to the startup files without changing runtime behavior.
+- Updated the focused formatting gate to run Prettier in write mode and fail on the resulting Git diff, so the next workflow log exposes the exact deterministic formatter delta instead of only naming the file.
 
 ### Evidence
 
 ```yaml
-verified_branch_head: 937946753f97a817cd0974080ebdf6739ed4c6a7
-focused_workflow_run: 30683659954
-focused_workflow_job: 91325345433
-focused_vitest: 10 passed
-focused_eslint: passed
-focused_prettier:
+previous_verified_branch_head: 937946753f97a817cd0974080ebdf6739ed4c6a7
+previous_focused_workflow_run: 30683659954
+previous_focused_workflow_job: 91325345433
+previous_focused_vitest: 10 passed
+previous_focused_eslint: passed
+previous_focused_prettier:
   result: failed
   file: src/Assets/AssetStartup.js
 repository_format_workflow:
   run: 30683659926
-  result: success
+  result: success_with_continue_on_error
 repository_lint_workflow:
   run: 30683659976
   result: success
@@ -69,6 +70,7 @@ repository_build_workflow:
 repository_codeql_workflow:
   run: 30683659941
   result: success
+diagnostic_workflow_commit: f2fa87efa87c46f0ae2bc74eaffef7f29bcbbe20
 proprietary_assets_added: false
 private_assets_added: false
 ```
@@ -79,15 +81,16 @@ private_assets_added: false
 - [x] Production/default mode fails closed.
 - [x] Local import requires explicit development configuration.
 - [x] Controlled startup error path exists.
-- [x] Focused tests pass: 10/10.
-- [x] Focused ESLint passes.
+- [x] Focused tests pass: 10/10 on the last verified source head.
+- [x] Focused ESLint passes on the last verified source head.
 - [ ] Focused Prettier passes for `src/Assets/AssetStartup.js`.
-- [x] Repository Format, Lint, Build, and CodeQL workflows pass for the verified branch head.
+- [x] Repository Lint, Build, and CodeQL workflows pass for the last verified source head.
+- [ ] Replacement focused workflow completes and provides either a clean formatting gate or the exact formatter diff.
 
 ### Current blocker
 
-Focused workflow `30683659954` checked out branch head `937946753f97a817cd0974080ebdf6739ed4c6a7`. Its test step passed 10/10 and its ESLint step passed, but job `91325345433` failed at `npx prettier --check` solely for `src/Assets/AssetStartup.js`. Repository-level Format, Lint, Build, and CodeQL workflows all passed on the same branch head. This is therefore a focused-workflow formatting-policy mismatch or an exact formatter-output mismatch, not a known runtime, unit-test, lint, build, private-asset, or proprietary-asset failure. Round 4 has not started.
+Focused workflow `30683659954` checked out branch head `937946753f97a817cd0974080ebdf6739ed4c6a7`. Its test step passed 10/10 and its ESLint step passed, but job `91325345433` failed at `npx prettier --check` solely for `src/Assets/AssetStartup.js`. The repository Format workflow cannot be used as a strict acceptance signal because its Prettier step is configured with `continue-on-error: true`. Commit `f2fa87efa87c46f0ae2bc74eaffef7f29bcbbe20` changes only the focused verification workflow: it runs Prettier with `--write`, then fails on `git diff --exit-code`, which will expose the exact formatter delta in the workflow log. No runtime source, tests, private assets, or proprietary assets were changed in this controlled cycle. Round 4 has not started.
 
 ## Next controlled round
 
-Continue Round 3 only. Reproduce the focused command with the repository-installed Prettier 3.8.1, capture the exact formatter diff for `src/Assets/AssetStartup.js`, apply only that formatting delta or align the focused workflow with the repository format policy, and rerun focused Vitest, ESLint, and Prettier. Mark Round 3 `PASS` and set `next_round: 4` only after all focused checks pass. Do not begin Round 4 before the gate passes.
+Continue Round 3 only. Read the replacement focused workflow log generated from commit `f2fa87efa87c46f0ae2bc74eaffef7f29bcbbe20`. If it is clean, mark Round 3 `PASS` and set `next_round: 4`. If it fails, apply only the exact logged Prettier delta to `src/Assets/AssetStartup.js`, then rerun focused Vitest, ESLint, and formatting. Do not begin Round 4 before the gate passes.
