@@ -1,4 +1,5 @@
 import AssetManifest from './AssetManifest.js';
+import AssetPreflight from './AssetPreflight.js';
 import AssetServerConfig from './AssetServerConfig.js';
 
 const AssetBootstrapState = Object.freeze({
@@ -16,6 +17,7 @@ class AssetBootstrapError extends Error {
 		this.name = 'AssetBootstrapError';
 		this.code = code;
 		this.cause = cause;
+		this.report = cause?.report || null;
 	}
 }
 
@@ -26,6 +28,10 @@ function classifyError(error) {
 
 	if (error?.name === 'AbortError') {
 		return new AssetBootstrapError('ASSET_BOOTSTRAP_TIMEOUT', 'Asset bootstrap request timed out.', error);
+	}
+
+	if (error?.code === 'ASSET_PREFLIGHT_CRITICAL_FAILURE') {
+		return new AssetBootstrapError(error.code, error.message, error);
 	}
 
 	const message = error?.message || 'Unknown asset bootstrap failure.';
@@ -46,10 +52,12 @@ export default class AssetBootstrap {
 	constructor(options = {}) {
 		this._loadConfig = options.loadConfig || (path => AssetServerConfig.load(path));
 		this._loadManifest = options.loadManifest || (() => AssetManifest.load());
+		this._runPreflight = options.runPreflight || ((manifest, groups) => AssetPreflight.run(manifest, groups));
 		this._onStateChange = options.onStateChange || null;
 		this.state = AssetBootstrapState.IDLE;
 		this.config = null;
 		this.manifest = null;
+		this.preflightReport = null;
 		this.error = null;
 	}
 
@@ -70,6 +78,7 @@ export default class AssetBootstrap {
 
 		this.config = null;
 		this.manifest = null;
+		this.preflightReport = null;
 		this.error = null;
 
 		try {
@@ -87,9 +96,14 @@ export default class AssetBootstrap {
 				);
 			}
 			this.manifest.validateRequiredGroups(this.config.requiredGroups || []);
+			this.preflightReport = this._runPreflight(this.manifest, this.config.requiredGroups || []);
 
 			this._setState(AssetBootstrapState.READY);
-			return Object.freeze({ config: this.config, manifest: this.manifest });
+			return Object.freeze({
+				config: this.config,
+				manifest: this.manifest,
+				preflightReport: this.preflightReport
+			});
 		} catch (error) {
 			this.error = classifyError(error);
 			this._setState(AssetBootstrapState.FAILED);
