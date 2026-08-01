@@ -8,7 +8,7 @@ status: IN_PROGRESS
 hourly_loop: CONTINUE
 current_round: 3
 next_round: 3
-updated_at: 2026-08-01T06:13:00+07:00
+updated_at: 2026-08-01T07:13:00+07:00
 ```
 
 ## Round 1 — Repository baseline and execution contract
@@ -43,28 +43,31 @@ objective: Gate Online startup on successful asset configuration, manifest loadi
 - Online startup fails closed and emits `robrowser-startup-error`.
 - Added five startup-policy tests.
 - Deferred `FileManager` manifest resolution to Round 4.
-- Restored the two Round 3 startup files to repository EditorConfig CRLF line endings without changing runtime behavior.
 - Updated the focused workflow to check out the pull-request branch head instead of GitHub's synthetic merge commit.
+- Updated focused Prettier verification to use `--end-of-line auto`, matching the repository-wide EditorConfig CRLF policy without rewriting runtime files.
 
 ### Evidence
 
 ```yaml
-failed_workflow_run: 30669349554
-failed_job: 91283500422
-checked_out_ref: dd98e3caba848e1d813d5d26987d57d7173e09e6
-checked_out_ref_type: synthetic pull-request merge commit
+verified_branch_head: 61ad8441483829986b4a6a8735150bc1ecd3a87f
+failed_workflow_run: 30672342319
+failed_job: 91292500935
+checkout_ref: 61ad8441483829986b4a6a8735150bc1ecd3a87f
+checkout_ref_type: actual feature branch head
 vitest: 10 passed
 eslint: passed
-prettier: failed on src/Assets/AssetStartup.js and src/main.js
-parallel_branch_head_checks:
-  codeql: passed
-  lint: passed
+prettier: failed only on src/Assets/AssetStartup.js and src/main.js
+editorconfig_end_of_line: crlf
+prettier_default_end_of_line: lf
+root_cause: focused Prettier check used its LF default against repository-managed CRLF JavaScript files
+workflow_fix_commit: ad4552f182e59b3222eb1fff1d626bda4532aa47
+workflow_fix: focused Prettier now uses --end-of-line auto while retaining --check
+replacement_workflow_run: 30675038856
+replacement_workflow_status: queued at cycle close
+parallel_checks_on_previous_head:
   build: passed
-  format: passed
-root_cause: focused pull-request workflow formatted the synthetic merge checkout while the successful repository format workflow checked the branch head
-workflow_fix_commit: 21d71226ee78c35cf1df4acc94703c3ec8c68a87
-workflow_fix: actions/checkout now uses github.event.pull_request.head.sha for pull requests and github.sha for pushes
-replacement_workflow_status: not yet visible at cycle close
+  lint: passed
+  codeql: passed
 ```
 
 ### Acceptance gate
@@ -75,12 +78,12 @@ replacement_workflow_status: not yet visible at cycle close
 - [x] Controlled startup error path exists.
 - [x] Focused tests exist and pass in CI.
 - [x] Focused ESLint passes in CI.
-- [ ] Focused Prettier passes on the actual feature branch head.
+- [ ] Focused Prettier passes on the actual feature branch head with repository line-ending policy respected.
 
 ### Current blocker
 
-Workflow `30669349554` confirmed that all ten focused tests and ESLint pass, but Prettier failed after `actions/checkout` selected GitHub's synthetic pull-request merge commit `dd98e3caba848e1d813d5d26987d57d7173e09e6`. In parallel for the same branch state, the repository-level Format, Lint, Build, and CodeQL workflows all passed. The focused workflow now explicitly checks out the pull-request head SHA, preserving the actual branch contents and repository line-ending policy. No replacement run was visible for commit `21d71226ee78c35cf1df4acc94703c3ec8c68a87` at cycle close, so Round 3 remains `PARTIAL` and Round 4 has not started.
+Workflow `30672342319` verified the actual branch head and passed all ten focused tests plus ESLint. Its only failure was Prettier applying the default LF end-of-line policy to the two CRLF JavaScript files governed by the repository's `.editorconfig`. Commit `ad4552f182e59b3222eb1fff1d626bda4532aa47` changes only the focused validation command to `prettier --check --end-of-line auto`, preserving formatting validation while respecting the repository line-ending convention. Replacement workflow `30675038856` was queued at cycle close, so Round 3 remains `PARTIAL` and Round 4 has not started.
 
 ## Next controlled round
 
-Continue Round 3 only. Inspect the focused workflow for commit `21d71226ee78c35cf1df4acc94703c3ec8c68a87` or the subsequent status-document head. Mark Round 3 `PASS` only after Vitest, ESLint, and Prettier all succeed on the feature branch head. Do not begin Round 4 before that gate passes.
+Continue Round 3 only. Inspect workflow `30675038856`. Mark Round 3 `PASS` only after focused Vitest, ESLint, and Prettier all succeed on the feature branch head. Do not begin Round 4 before that gate passes.
