@@ -13,15 +13,25 @@ function validConfig() {
 
 function validManifest() {
 	return {
-		validateRequiredGroups: vi.fn()
+		releaseId: 'test-release',
+		groups: { bootstrap: ['ui.login.background'] },
+		assets: { 'ui.login.background': { path: 'aa/bb/background.bmp' } },
+		validateRequiredGroups: vi.fn(),
+		get(assetId) {
+			const asset = this.assets[assetId];
+			if (!asset) throw new Error('Invalid asset record: ' + assetId);
+			return asset;
+		}
 	};
 }
 
 describe('AssetBootstrap', () => {
-	it('loads configuration and manifest in order and reaches ready', async () => {
+	it('loads configuration and manifest in order, runs preflight, and reaches ready', async () => {
 		const calls = [];
 		const config = validConfig();
 		const manifest = validManifest();
+		const preflightReport = { status: 'pass' };
+		const runPreflight = vi.fn(() => preflightReport);
 		const states = [];
 		const bootstrap = new AssetBootstrap({
 			loadConfig: async path => {
@@ -32,6 +42,7 @@ describe('AssetBootstrap', () => {
 				calls.push(['manifest', loadedConfig]);
 				return manifest;
 			},
+			runPreflight,
 			onStateChange: state => states.push(state)
 		});
 
@@ -42,7 +53,8 @@ describe('AssetBootstrap', () => {
 			['manifest', config]
 		]);
 		expect(manifest.validateRequiredGroups).toHaveBeenCalledWith(['bootstrap']);
-		expect(result).toEqual({ config, manifest });
+		expect(runPreflight).toHaveBeenCalledWith(manifest, ['bootstrap']);
+		expect(result).toEqual({ config, manifest, preflightReport });
 		expect(bootstrap.state).toBe(AssetBootstrapState.READY);
 		expect(states).toEqual([
 			AssetBootstrapState.LOADING_CONFIG,
@@ -96,6 +108,28 @@ describe('AssetBootstrap', () => {
 		await expect(bootstrap.initialize()).rejects.toMatchObject({
 			code: 'ASSET_REQUIRED_GROUP_INVALID'
 		});
+		expect(bootstrap.state).toBe(AssetBootstrapState.FAILED);
+	});
+
+	it('preserves the preflight report when critical completeness validation fails', async () => {
+		const report = { status: 'fail', criticalFailures: ['bootstrap'] };
+		const preflightError = Object.assign(new Error('Asset preflight failed.'), {
+			code: 'ASSET_PREFLIGHT_CRITICAL_FAILURE',
+			report
+		});
+		const bootstrap = new AssetBootstrap({
+			loadConfig: async () => validConfig(),
+			loadManifest: async () => validManifest(),
+			runPreflight: () => {
+				throw preflightError;
+			}
+		});
+
+		await expect(bootstrap.initialize()).rejects.toMatchObject({
+			code: 'ASSET_PREFLIGHT_CRITICAL_FAILURE',
+			report
+		});
+		expect(bootstrap.preflightReport).toBeNull();
 		expect(bootstrap.state).toBe(AssetBootstrapState.FAILED);
 	});
 
