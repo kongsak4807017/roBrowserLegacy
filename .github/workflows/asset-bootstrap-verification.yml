@@ -43,13 +43,13 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: Run focused tests
-        run: npx vitest run tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js
+        run: npx vitest run tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js tests/Assets/AssetFileResolver.test.js
 
       - name: Run focused lint
-        run: npx eslint src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/App/Online.js src/main.js --max-warnings 0
+        run: npx eslint src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/Assets/AssetFileResolver.js src/App/Online.js src/main.js tests/Assets/AssetFileResolver.test.js --max-warnings 0
 
       - name: Check focused formatting
         run: |
-          npx prettier --write src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/App/Online.js src/main.js tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js
+          npx prettier --write src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/Assets/AssetFileResolver.js src/App/Online.js src/main.js tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js tests/Assets/AssetFileResolver.test.js
           git diff --check
-          git diff --exit-code -- src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/App/Online.js src/main.js tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js
+          git diff --exit-code -- src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/Assets/AssetFileResolver.js src/App/Online.js src/main.js tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js tests/Assets/AssetFileResolver.test.js
