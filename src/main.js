@@ -4,8 +4,10 @@
  * Centralized loader for all applications.
  */
 import { roInitSpinner } from 'App/PreLoader.js';
+import { installAssetFileResolver } from 'Assets/AssetFileResolver.js';
 import * as AssetStartup from 'Assets/AssetStartup.js';
 import Configs from 'Core/Configs.js';
+import FileManager from 'Core/FileManager.js';
 
 const APP = {
 	ONLINE: 1,
@@ -20,6 +22,9 @@ const APP = {
 async function launchOnline(config) {
 	try {
 		const assetRuntime = await AssetStartup.initializeAssetStartup(config);
+		if (assetRuntime.mode === AssetStartup.ASSET_SERVER_MODE) {
+			installAssetFileResolver(FileManager, assetRuntime.manifest);
+		}
 		window.ROAssetRuntime = assetRuntime;
 
 		const Online = await import('App/Online.js');
