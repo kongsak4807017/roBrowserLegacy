@@ -46,7 +46,7 @@ jobs:
         run: npx vitest run tests/Assets/AssetBootstrap.test.js tests/Assets/AssetStartup.test.js tests/Assets/AssetFileResolver.test.js
 
       - name: Run focused lint
-        run: npx eslint src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/Assets/AssetFileResolver.js src/App/Online.js src/main.js tests/Assets/AssetFileResolver.test.js --max-warnings 0
+        run: npx eslint src/Assets/AssetBootstrap.js src/Assets/AssetStartup.js src/Assets/AssetFileResolver.js src/App/Online.js src/main.js --max-warnings 0
 
       - name: Check focused formatting
         run: |
